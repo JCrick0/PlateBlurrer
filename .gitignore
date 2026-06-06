@@ -1,6 +1,21 @@
-/vcpkg_installed
-/.vs
-/out
-.gitattributes
-CMakePresets.json
-traffic.jpg
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Build directories
+/out/
+/build/
+/vcpkg_installed/
+/.vs/
+
+# Local configuration overrides
+CMakeUserPresets.json
