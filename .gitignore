@@ -19,3 +19,6 @@
 
 # Local configuration overrides
 CMakeUserPresets.json
+
+# temporary files
+.gitattributes
