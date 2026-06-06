@@ -1,0 +1,6 @@
+/vcpkg_installed
+/.vs
+/out
+.gitattributes
+CMakePresets.json
+traffic.jpg

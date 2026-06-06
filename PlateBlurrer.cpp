@@ -150,15 +150,23 @@ int main() {
     printCentered(COLOR_YELLOW "[Notice] Processing video: " COLOR_RESET);
     printCentered(std::to_string(frameWidth) + "x" + std::to_string(frameHeight) + " | FPS: " + std::to_string(fps));
 
-    cv::VideoWriter writer(
-        "output/" + inputMediaName,
-        cv::VideoWriter::fourcc('m', 'p', '4', 'v'),
-        fps,
-        cv::Size(frameWidth, frameHeight)
-    );
+    // Construct for FFmpeg call 
+	//This command lets us get the audio stream from the original video and combine it with our processed frames, encoding everything into a new MP4 file in one go, without needing to save intermediate video files.
+    std::string ffmpegPipeCmd =
+        "ffmpeg -loglevel error -y -f rawvideo -vcodec rawvideo -pix_fmt bgr24 -s " +
+        std::to_string(frameWidth) + "x" + std::to_string(frameHeight) +
+        " -r " + std::to_string(fps) +
+        " -i - -i " + inputMediaName +
+        " -c:v libx264 -pix_fmt yuv420p -c:a aac -map 0:v -map 1:a? -shortest output/" + inputMediaName;
 
-    if (!writer.isOpened()) {
-        printCentered(COLOR_RED "[Error] Could not initialize VideoWriter stream output file!" COLOR_RESET);
+#if defined(_WIN32)
+    FILE* ffmpegPipe = _popen(ffmpegPipeCmd.c_str(), "wb");
+#else
+    FILE* ffmpegPipe = popen(ffmpegPipeCmd.c_str(), "w");
+#endif
+
+    if (!ffmpegPipe) {
+        printCentered(COLOR_RED "[Error] Failed to initialize background FFmpeg stream!" COLOR_RESET);
         return -1;
     }
 
@@ -169,7 +177,7 @@ int main() {
     cv::Mat frame;
     int currentFrameIndex = 0;
 
-    printCentered(COLOR_YELLOW "[Notice] Processing background rendering pipeline... please wait..." COLOR_RESET);
+    printCentered(COLOR_YELLOW "[Notice] Processing background rendering with audio... please wait..." COLOR_RESET);
 
     while (cap.read(frame)) {
         if (frame.empty()) break;
@@ -236,13 +244,20 @@ int main() {
             blurLicensePlate(frame, lastKnownPlateBox);
         }
 
-        writer.write(frame);
+        // Stream pixel arrays across memory pipe right to the custom encoder
+        std::fwrite(frame.data, 1, frame.total() * frame.elemSize(), ffmpegPipe);
     }
 
     cap.release();
-    writer.release();
-    cv::destroyAllWindows();
+#if defined(_WIN32)
+    _pclose(ffmpegPipe);
+#else
+    pclose(ffmpegPipe);
+#endif
 
-    printCentered(COLOR_GREEN "[Success] Complete video file saved to: output/" + inputMediaName + COLOR_RESET);
+    printCentered(COLOR_GREEN "[Success] Complete video file with audio saved to: output/" + inputMediaName + COLOR_RESET);
+	printCentered(COLOR_BOLD "=== Processing Complete ===" COLOR_RESET);
+	printCentered(COLOR_CYAN "Press Enter to exit..." COLOR_RESET);
+	std::cin.get();
     return 0;
 }
