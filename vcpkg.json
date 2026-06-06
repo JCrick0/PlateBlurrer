@@ -1,0 +1,8 @@
+{
+  "name": "motorcycleblurrer",
+  "version-string": "1.0.0",
+  "dependencies": [
+    "opencv4",
+    "libtorch"
+  ]
+}
