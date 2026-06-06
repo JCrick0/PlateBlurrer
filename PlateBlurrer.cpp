@@ -172,7 +172,7 @@ int main() {
 
     cv::Rect lastKnownPlateBox(0, 0, 0, 0);
     int persistenceFramesCounter = 0;
-    const int MAX_PERSISTENCE_FRAMES = 8;
+	const int MAX_PERSISTENCE_FRAMES = 30; //Best tested value for keeping the plate blurred for a short time after it disappears, to avoid flickering when detection is inconsistent across frames
 
     cv::Mat frame;
     int currentFrameIndex = 0;
@@ -244,7 +244,7 @@ int main() {
             blurLicensePlate(frame, lastKnownPlateBox);
         }
 
-        // Stream pixel arrays across memory pipe right to the custom encoder
+        // Stream pixel arrays across memory right to the custom encoder
         std::fwrite(frame.data, 1, frame.total() * frame.elemSize(), ffmpegPipe);
     }
 
